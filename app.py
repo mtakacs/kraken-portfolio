@@ -12,8 +12,8 @@ import pandas as pd
 import supabase
 
 # Set your Supabase credentials as environment variables
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL") or st.secrets["SUPABASE_URL"]
+SUPABASE_KEY = os.getenv("SUPABASE_KEY") or st.secrets["SUPABASE_KEY"]
 
 # Initialize Supabase
 supabase_client = supabase.Client(SUPABASE_URL, SUPABASE_KEY)
@@ -30,9 +30,8 @@ with open('README.md', 'r') as file:
 
 # Read Kraken API key and secret stored in environment variables
 api_url = "https://api.kraken.com"
-api_key = os.environ['API_KEY_KRAKEN']
-api_sec = os.environ['API_SEC_KRAKEN']
-
+api_key = os.environ['API_KEY_KRAKEN'] or st.secrets["API_KEY_KRAKEN"]
+api_sec = os.environ['API_SEC_KRAKEN'] or st.secrets["API_SEC_KRAKEN"]
 
 # Function to get Kraken signature
 def get_kraken_signature(urlpath, data, secret):
@@ -50,6 +49,7 @@ def kraken_request(uri_path, data, api_key, api_sec):
     headers['API-Key'] = api_key
     headers['API-Sign'] = get_kraken_signature(uri_path, data, api_sec)
     req = requests.post((api_url + uri_path), headers=headers, data=data)
+    print('Kraken Request: %s', api_url)
     return req
 
 if __name__ == "__main__":
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     coin_types_df = pd.DataFrame(coin_types_db.data)
 
     # Merge coin types with balances data
-    merged_data = pd.merge(pd.DataFrame(balances.items(), columns=['kraken_name', 'Balance']), coin_types_df, on='kraken_name', how='left')
+    # merged_data = pd.merge(pd.DataFrame(balances.items(), columns=['kraken_name', 'Balance']), coin_types_df, on='kraken_name', how='left')
     # Store to supabase via insert
     # kraken_balances_db, kraken_balances_count = supabase_client.table("kraken_balances").insert(balances).execute()
 
@@ -125,19 +125,5 @@ if __name__ == "__main__":
         st.balloons()
         st.write("kraken table hosted in Supabase 📝")
         st.dataframe(coin_types_df)
-    # Show the author content
-    author_expander = st.expander("Author's Gthub Projects 🌏")
-    with author_expander:
-        url = "https://raw.githubusercontent.com/mattmajestic/mattmajestic/main/README.md"
-        response = requests.get(url)
-        readme_content = response.text if response.status_code == 200 else ""
-        iframe_html = f'<iframe srcdoc="{readme_content}</iframe>'
-        st.markdown(iframe_html, unsafe_allow_html=True)
 
-    # Show the BTC Pay Server
-    btc_expander = st.expander("Donate BTC 💸")
-    with btc_expander:
-        url = "https://mainnet.demo.btcpayserver.org/api/v1/invoices?storeId=4r8DKKKMkxGPVKcW9TXB2eta7PTVzzs192TWM3KuY52e&price=100&currency=USD&defaultPaymentMethod=BTC"
-        link='Pay wit BTC [via this link](https://mainnet.demo.btcpayserver.org/api/v1/invoices?storeId=4r8DKKKMkxGPVKcW9TXB2eta7PTVzzs192TWM3KuY52e&price=100&currency=USD&defaultPaymentMethod=BTC)'
-        st.markdown(link,unsafe_allow_html=True)
-        components.iframe(url,width = 300,height = 500, scrolling=True)
+
